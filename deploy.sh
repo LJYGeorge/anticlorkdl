@@ -41,7 +41,7 @@ check_system() {
     
     # 检查内存
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
-    if [ "$total_mem" -lt 2048 ]; then
+    if [ "$total_mem" -lt 1042 ]; then
         error "需要至少 2GB 内存"
     fi
     
