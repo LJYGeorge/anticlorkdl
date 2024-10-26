@@ -1,5 +1,4 @@
-# 创建新的部署脚本
-cat > deploy.sh << 'EOF'
+cat > deploy.sh << 'EOL'
 #!/bin/bash
 
 # 设置错误时退出
@@ -32,7 +31,7 @@ main() {
     # 检查是否为 root 用户
     if [ "$EUID" -ne 0 ]; then
         error "请使用 root 用户运行此脚本"
-    }
+    fi
     
     # 更新系统包
     info "更新系统包..."
@@ -104,4 +103,4 @@ END
 
 # 执行主函数
 main
-EOF
+EOL
