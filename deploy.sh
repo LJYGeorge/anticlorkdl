@@ -30,34 +30,6 @@ error() {
     exit 1
 }
 
-# 检查系统要求
-check_system() {
-    info "检查系统要求..."
-    
-    # 检查操作系统
-    if [ ! -f /etc/os-release ]; then
-        error "不支持的操作系统"
-    fi
-    
-    # 检查内存
-    total_mem=$(free -m | awk '/^Mem:/{print $2}')
-    if [ "$total_mem" -lt 1042 ]; then
-        error "需要至少 2GB 内存"
-    fi
-    
-    # 检查磁盘空间
-    free_space=$(df -m / | awk 'NR==2 {print $4}')
-    if [ "$free_space" -lt 10240 ]; then
-        error "需要至少 10GB 可用空间"
-    fi
-    
-    # 检查CPU核心数
-    cpu_cores=$(nproc)
-    if [ "$cpu_cores" -lt 2 ]; then
-        warn "建议至少使用2核CPU"
-    fi
-}
-
 # 检查并安装依赖
 check_dependency() {
     local cmd=$1
@@ -323,49 +295,6 @@ EOF
     systemctl restart nginx
 }
 
-# 配置系统优化
-setup_system_optimization() {
-    info "配置系统优化..."
-    
-    # 系统限制
-    cat > /etc/security/limits.d/crawler.conf << EOF
-www-data soft nofile 65535
-www-data hard nofile 65535
-EOF
-    
-    # 内核参数
-    cat > /etc/sysctl.d/99-crawler.conf << EOF
-net.core.somaxconn = 65535
-net.ipv4.tcp_max_syn_backlog = 65535
-net.ipv4.tcp_fin_timeout = 30
-net.ipv4.tcp_tw_reuse = 1
-EOF
-    
-    # 应用更改
-    sysctl --system
-}
-
-# 配置日志轮转
-setup_logrotate() {
-    info "配置日志轮转..."
-    
-    cat > /etc/logrotate.d/crawler << EOF
-$LOG_DIR/*.log {
-    daily
-    rotate 14
-    compress
-    delaycompress
-    notifempty
-    create 0640 www-data www-data
-    sharedscripts
-    postrotate
-        systemctl reload nginx
-        pm2 reloadLogs
-    endscript
-}
-EOF
-}
-
 # 主函数
 main() {
     info "开始部署网站资源爬虫..."
@@ -375,7 +304,6 @@ main() {
         error "请使用 root 用户运行此脚本"
     fi
     
-    check_system
     install_system_dependencies
     install_nodejs
     install_global_npm_packages
@@ -385,8 +313,6 @@ main() {
     setup_project
     setup_pm2
     setup_nginx
-    setup_system_optimization
-    setup_logrotate
     
     info "部署完成!"
     info ""
